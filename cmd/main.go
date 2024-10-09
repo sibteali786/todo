@@ -27,7 +27,7 @@ func main() {
 	case *list:
 		// List current todo items
 		for _, item := range *l {
-			if !item.Done {
+			if !item.Done { // this makes sure we display only tasks not completed
 				fmt.Println(item.Task)
 			}
 		}
