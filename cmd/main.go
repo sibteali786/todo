@@ -8,9 +8,14 @@ import (
 	"mygoprograms.com/todo"
 )
 
-const todoFileName = ".todo.json"
+var todoFileName = ".todo.json"
 
+// check if user defined env variable exists
 func main() {
+	if os.Getenv("TODO_FILENAME") != "" {
+		todoFileName = os.Getenv("TODO_FILENAME")
+	}
+
 	// Custom usage message
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "%s tool. Developed for Fun\n", os.Args[0])
