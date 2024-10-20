@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,11 +44,24 @@ func TestTodoCLI(t *testing.T) {
 	cmdPath := filepath.Join(dir, binName)
 
 	t.Run("AddNewTask", func(t *testing.T) {
-		cmd := exec.Command(cmdPath, "-task", task) // command path points to binary file like ./todo ( in mac )
+		cmd := exec.Command(cmdPath, "-add", task) // command path points to binary file like ./todo ( in mac )
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
 		}
 
+	})
+	task2 := "test task number 2"
+	t.Run("AddNewTaskFromSTDIN", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-add")
+		cmdSTDIN, err := cmd.StdinPipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		io.WriteString(cmdSTDIN, task2)
+		cmdSTDIN.Close()
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
 	})
 
 	t.Run("ListTasks", func(t *testing.T) {
@@ -56,7 +70,7 @@ func TestTodoCLI(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		expected := fmt.Sprintf(" 1: %s\n", task)
+		expected := fmt.Sprintf(" 1: %s\n 2: %s\n", task, task2)
 		if expected != string(out) {
 			t.Errorf("Expected %q, got %q instead\n", expected, string(out))
 		}
