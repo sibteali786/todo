@@ -68,15 +68,24 @@ func (l *List) Get(filename string) error {
 	return json.Unmarshal(file, l)
 }
 
-func (l *List) String() string {
+func (l *List) String(verbose bool) string {
 	formatted := ""
 	for k, t := range *l {
 		prefix := " "
 		if t.Done {
 			prefix = "X "
 		}
-		// Adjust the item number k to print numbers starting from 1 instead of 0
-		formatted += fmt.Sprintf("%s%d: %s\n", prefix, k+1, t.Task)
+		if verbose {
+			formatted += fmt.Sprintf("%s%d: %s [Created at: %s]", prefix, k+1, t.Task, t.CreateAt.Format("2006-01-02 15:04:05"))
+			if t.Done {
+				formatted += fmt.Sprintf(" [Completed at: %s]\n", t.CompletedAt.Format("2006-01-02 15:04:05"))
+			} else {
+				formatted += "\n"
+			}
+
+		} else {
+			formatted += fmt.Sprintf("%s%d: %s\n", prefix, k+1, t.Task)
+		}
 	}
 	return formatted
 }
