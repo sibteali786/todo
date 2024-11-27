@@ -18,6 +18,9 @@ var (
 
 func TestMain(m *testing.M) {
 	fmt.Println("Building tool...")
+	if os.Getenv("TODO_FILENAME") != "" {
+		fileName = os.Getenv("TODO_FILENAME")
+	}
 	if runtime.GOOS == "windows" {
 		binName += ".exe"
 	}
@@ -64,6 +67,13 @@ func TestTodoCLI(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+	t.Run("AddMultipleTasksFromMultilineInput", func(t *testing.T) {
+		multilineTasks := "task3\ntask4\ntask5"
+		cmd := exec.Command(cmdPath, "-add", multilineTasks)
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	})
 
 	t.Run("ListTasks", func(t *testing.T) {
 		cmd := exec.Command(cmdPath, "-list") // empty arguments mean list all tasks
@@ -71,7 +81,7 @@ func TestTodoCLI(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		expected := fmt.Sprintf(" 1: %s\n 2: %s\n", task, task2)
+		expected := fmt.Sprintf(" 1: %s\n 2: %s\n 3: task3\n 4: task4\n 5: task5\n", task, task2)
 		if expected != string(out) {
 			t.Errorf("Expected %q, got %q instead\n", expected, string(out))
 		}
@@ -88,8 +98,8 @@ func TestTodoCLI(t *testing.T) {
 			}
 		})
 	})
-	deleteTaskNum := "1"
-	t.Run("DeleteTasks", func(t *testing.T) {
+	deleteTaskNum := "3"
+	t.Run("DeleteTask", func(t *testing.T) {
 		cmd := exec.Command(cmdPath, "-delete", deleteTaskNum)
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
@@ -102,8 +112,8 @@ func TestTodoCLI(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Expected output should only include task2
-		expected := fmt.Sprintf(" 1: %s\n", task2)
+		// Expected output should include all tasks except task3
+		expected := fmt.Sprintf(" 1: %s\n 2: %s\n 3: task4\n 4: task5\n", task, task2)
 		if expected != string(out) {
 			t.Errorf("Expected %q, got %q instead\n", expected, string(out))
 		}

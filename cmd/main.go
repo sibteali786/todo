@@ -61,12 +61,14 @@ func main() {
 		}
 	case *add:
 		// Add a new task
-		t, err := getTask(os.Stdin, flag.Args()...)
+		tasks, err := getTask(os.Stdin, flag.Args()...)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		l.Add(t)
+		for _, task := range tasks {
+			l.Add(task)
+		}
 		// Save the new list
 		if err := l.Save(todoFileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -88,19 +90,40 @@ func main() {
 	}
 
 }
-func getTask(r io.Reader, args ...string) (string, error) {
+func getTask(r io.Reader, args ...string) ([]string, error) {
 	if len(args) > 0 {
-		return strings.Join(args, " "), nil
+		// Join arguments and split by '\n' to handle multiline input
+		input := strings.Join(args, " ")
+		lines := strings.Split(input, "\n")
+
+		var tasks []string
+		for _, line := range lines {
+			task := strings.TrimSpace(line)
+			if len(task) > 0 {
+				tasks = append(tasks, task)
+			}
+		}
+
+		if len(tasks) == 0 {
+			return nil, fmt.Errorf("No valid tasks provided")
+		}
+
+		return tasks, nil
 	}
+
 	s := bufio.NewScanner(r)
-	s.Scan()
-
+	var tasks []string
+	for s.Scan() {
+		line := strings.TrimSpace(s.Text())
+		if len(line) > 0 {
+			tasks = append(tasks, line)
+		}
+	}
 	if err := s.Err(); err != nil {
-		return "", err
+		return nil, err
 	}
-
-	if len(s.Text()) == 0 {
-		return "", fmt.Errorf("Task cannot be blank")
+	if len(tasks) == 0 {
+		return nil, fmt.Errorf("No tasks entered")
 	}
-	return s.Text(), nil
+	return tasks, nil
 }
